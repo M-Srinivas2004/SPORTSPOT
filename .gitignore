@@ -18,6 +18,9 @@ build/
 .env.local
 .env.production
 *.local
+*.db
+*.db-journal
+.vercel
 
 # Logs
 npm-debug.log*

@@ -18,8 +18,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { user } = useAuth();
 
   useEffect(() => {
-    // Only connect if in browser
-    const newSocket = io(window.location.origin, {
+    const socketTarget = (import.meta as any).env?.VITE_SOCKET_URL || window.location.origin;
+    const newSocket = io(socketTarget, {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       autoConnect: true,
