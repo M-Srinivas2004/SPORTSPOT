@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#080D18] text-white selection:bg-[#B6FF3B] selection:text-[#080D18] min-h-screen font-sans;
+  }
+
+  /* Custom sports-tech scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #080D18;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1C2A44;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #B6FF3B;
+  }
+}

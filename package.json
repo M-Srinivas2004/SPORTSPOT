@@ -1,0 +1,34 @@
+{
+  "name": "sportspot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SPORTSPOT - Digital Sports Sponsorship Marketplace",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build:api": "npm run build --workspace=apps/api",
+    "build:web": "npm run build --workspace=apps/web",
+    "build": "npm run build:api && npm run build:web",
+    "test": "npm run test --workspace=apps/api && npm run test --workspace=apps/web",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "prisma:seed": "npm run prisma:seed --workspace=apps/api"
+  },
+  "keywords": [
+    "sports",
+    "sponsorship",
+    "marketplace",
+    "react",
+    "node",
+    "express",
+    "prisma",
+    "postgresql",
+    "typescript"
+  ],
+  "author": "SPORTSPOT Team",
+  "license": "UNLICENSED"
+}

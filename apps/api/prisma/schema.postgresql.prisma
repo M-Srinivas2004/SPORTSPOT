@@ -1,0 +1,365 @@
+// SPORTSPOT Enterprise Production Database Schema
+// Database: PostgreSQL with Prisma ORM
+// For production deployment with PostgreSQL connection:
+// DATABASE_URL="postgresql://user:password@localhost:5432/sportspot?schema=public"
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ATHLETE
+  SPONSOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  STATE_LEVEL
+  NATIONAL_LEVEL
+  INTERNATIONAL_PRO
+}
+
+enum SponsorshipType {
+  INDIVIDUAL
+  TEAM
+  TOURNAMENT
+  EQUIPMENT
+  TRAVEL
+  TRAINING
+  FINANCIAL
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PAUSED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum AgreementStatus {
+  DRAFT
+  PENDING_REVIEW
+  SIGNED
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  CAMPAIGN_APPROVAL
+  CAMPAIGN_REJECTED
+  APPLICATION_SUBMITTED
+  APPLICATION_STATUS
+  NEW_MESSAGE
+  AGREEMENT_UPDATE
+  SYSTEM
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  role          Role           @default(ATHLETE)
+  status        UserStatus     @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  athleteProfile AthleteProfile?
+  sponsorProfile SponsorProfile?
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model AthleteProfile {
+  id              String           @id @default(uuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName        String
+  avatarUrl       String?
+  coverUrl        String?
+  bio             String?
+  primarySport    String
+  secondarySports String?          // Comma-separated or JSON
+  location        String
+  experienceLevel ExperienceLevel  @default(INTERMEDIATE)
+  isPublic        Boolean          @default(true)
+  isVerified      Boolean          @default(false)
+  dateOfBirth     DateTime?
+  gender          String?
+  guardianConsent Boolean          @default(false)
+  socialLinks     String?          // JSON formatted
+  profileViews    Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  achievements    Achievement[]
+  certificates    Certificate[]
+  applications    Application[]
+  savedCampaigns  SavedCampaign[]
+  conversations   Conversation[]
+  agreements      SponsorshipAgreement[]
+
+  @@index([primarySport])
+  @@index([location])
+  @@index([experienceLevel])
+  @@index([isVerified])
+  @@map("athlete_profiles")
+}
+
+model Achievement {
+  id          String         @id @default(uuid())
+  athleteId   String
+  athlete     AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  title       String
+  year        Int
+  tournament  String
+  rankOrMedal String
+  description String
+  isVerified  Boolean        @default(false)
+  proofUrl    String?
+  createdAt   DateTime       @default(now())
+
+  @@index([athleteId])
+  @@map("achievements")
+}
+
+model Certificate {
+  id         String         @id @default(uuid())
+  athleteId  String
+  athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  title      String
+  issuingOrg String
+  issueDate  DateTime
+  fileUrl    String
+  isVerified Boolean        @default(false)
+  createdAt  DateTime       @default(now())
+
+  @@index([athleteId])
+  @@map("certificates")
+}
+
+model SponsorProfile {
+  id               String          @id @default(uuid())
+  userId           String          @unique
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName      String
+  logoUrl          String?
+  description      String?
+  industryCategory String
+  website          String?
+  contactPerson    String
+  businessLocation String
+  contactPhone     String?
+  isVerified       Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  campaigns        Campaign[]
+  conversations    Conversation[]
+  agreements       SponsorshipAgreement[]
+
+  @@index([companyName])
+  @@index([industryCategory])
+  @@map("sponsor_profiles")
+}
+
+model Campaign {
+  id                      String          @id @default(uuid())
+  sponsorId               String
+  sponsor                 SponsorProfile  @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  title                   String
+  sportCategory           String
+  sponsorshipType         SponsorshipType @default(FINANCIAL)
+  budgetMin               Float
+  budgetMax               Float
+  currency                String          @default("USD")
+  description             String
+  eligibilityRequirements String
+  location                String          @default("Global")
+  deadline                DateTime
+  status                  CampaignStatus  @default(DRAFT)
+  moderationNote          String?
+  viewsCount              Int             @default(0)
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  applications            Application[]
+  savedBy                 SavedCampaign[]
+  agreements              SponsorshipAgreement[]
+
+  @@index([sportCategory])
+  @@index([sponsorshipType])
+  @@index([status])
+  @@index([deadline])
+  @@map("campaigns")
+}
+
+model Application {
+  id              String            @id @default(uuid())
+  campaignId      String
+  campaign        Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         AthleteProfile    @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  pitch           String
+  requestedAmount Float?
+  status          ApplicationStatus @default(SUBMITTED)
+  sponsorNote     String?
+  matchScore      Float?
+  matchReason     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  agreement       SponsorshipAgreement?
+
+  @@unique([campaignId, athleteId])
+  @@index([campaignId])
+  @@index([athleteId])
+  @@index([status])
+  @@map("applications")
+}
+
+model SavedCampaign {
+  id         String         @id @default(uuid())
+  athleteId  String
+  athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt  DateTime       @default(now())
+
+  @@unique([athleteId, campaignId])
+  @@index([athleteId])
+  @@map("saved_campaigns")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      NotificationType @default(SYSTEM)
+  isRead    Boolean          @default(false)
+  actionUrl String?
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model Conversation {
+  id        String         @id @default(uuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sponsorId String
+  sponsor   SponsorProfile @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  messages  Message[]
+
+  @@unique([athleteId, sponsorId])
+  @@index([athleteId])
+  @@index([sponsorId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Event {
+  id               String   @id @default(uuid())
+  title            String
+  sport            String
+  organizer        String
+  location         String
+  eventDate        DateTime
+  description      String
+  sponsorshipOpen  Boolean  @default(true)
+  registrationLink String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([sport])
+  @@index([eventDate])
+  @@map("events")
+}
+
+model SponsorshipAgreement {
+  id             String          @id @default(uuid())
+  campaignId     String
+  campaign       Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  applicationId  String          @unique
+  application    Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  athleteId      String
+  athlete        AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sponsorId      String
+  sponsor        SponsorProfile  @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  amount         Float
+  currency       String          @default("USD")
+  durationMonths Int
+  terms          String
+  status         AgreementStatus @default(DRAFT)
+  pdfPath        String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([athleteId])
+  @@index([sponsorId])
+  @@index([status])
+  @@map("sponsorship_agreements")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  resource  String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
