@@ -112,6 +112,7 @@ export const createCampaignSchema = z.object({
     eligibilityRequirements: z.string().min(10, 'Eligibility requirements must be specified'),
     location: z.string().default('Global'),
     deadline: z.string().refine(val => !isNaN(Date.parse(val)), 'Valid deadline required'),
+    submitForReview: z.boolean().optional(),
   }).refine(data => data.budgetMax >= data.budgetMin, {
     message: 'Maximum budget must be greater than or equal to minimum budget',
     path: ['budgetMax'],
@@ -120,7 +121,7 @@ export const createCampaignSchema = z.object({
 
 export const submitApplicationSchema = z.object({
   body: z.object({
-    campaignId: z.string().uuid('Valid campaign ID is required'),
+    campaignId: z.string().min(1, 'Valid campaign ID is required'),
     pitch: z.string().min(20, 'Application pitch must be at least 20 characters'),
     requestedAmount: z.number().positive().optional(),
   }),
@@ -128,8 +129,8 @@ export const submitApplicationSchema = z.object({
 
 export const updateApplicationStatusSchema = z.object({
   params: z.object({
-    id: z.string().uuid(),
-  }),
+    id: z.string().min(1),
+  }).optional(),
   body: z.object({
     status: z.enum(['UNDER_REVIEW', 'SHORTLISTED', 'ACCEPTED', 'REJECTED', 'WITHDRAWN']),
     sponsorNote: z.string().optional(),
@@ -138,8 +139,8 @@ export const updateApplicationStatusSchema = z.object({
 
 export const moderateCampaignSchema = z.object({
   params: z.object({
-    id: z.string().uuid(),
-  }),
+    id: z.string().min(1),
+  }).optional(),
   body: z.object({
     status: z.enum(['APPROVED', 'REJECTED', 'PAUSED', 'CLOSED']),
     moderationNote: z.string().optional(),
@@ -148,7 +149,7 @@ export const moderateCampaignSchema = z.object({
 
 export const createAgreementSchema = z.object({
   body: z.object({
-    applicationId: z.string().uuid('Valid application ID is required'),
+    applicationId: z.string().min(1, 'Valid application ID is required'),
     amount: z.number().positive('Agreement amount must be positive'),
     currency: z.string().default('USD'),
     durationMonths: z.number().int().positive('Duration in months is required'),
