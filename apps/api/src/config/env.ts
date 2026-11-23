@@ -10,7 +10,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().default('5000').transform(val => parseInt(val, 10)),
   CLIENT_URL: z.string().default('http://localhost:5173'),
-  DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/sportspot?schema=public'),
+  DATABASE_URL: z.string().default('file:./prisma/dev.db'),
   SESSION_SECRET: z.string().default('sportspot_super_secure_session_secret_default_key_32chars'),
   JWT_SECRET: z.string().default('sportspot_jwt_token_secret_default_key_998877'),
   COOKIE_DOMAIN: z.string().default('localhost'),

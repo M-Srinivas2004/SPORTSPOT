@@ -29,13 +29,11 @@ jobs:
 
       - name: Push Database Schema
         run: npx prisma db push --schema=apps/api/prisma/schema.prisma --accept-data-loss
-        env:
-          DATABASE_URL: "file:./dev.db"
 
       - name: Run Test Suites (API & Web)
         run: npm test
         env:
-          DATABASE_URL: "file:./dev.db"
+          DATABASE_URL: "file:./prisma/dev.db"
           NODE_ENV: "test"
           JWT_SECRET: "sportspot_test_secret_key_32_characters"
           SESSION_SECRET: "sportspot_test_secret_key_32_characters"
