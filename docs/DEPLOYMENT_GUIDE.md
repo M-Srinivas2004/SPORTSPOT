@@ -26,14 +26,14 @@ GitHub Copilot is pre-configured with repository-level context in:
 3. Choose **Public** or **Private**.
 4. **Do NOT** initialize with a README, .gitignore, or license (these already exist locally).
 5. Click **Create repository**.
-6. Copy the repository URL (e.g., `https://github.com/<your-username>/SPORTSPOT.git`).
+6. Copy the repository URL (e.g., `https://github.com/M-Srinivas2004/SPORTSPOT.git`).
 
 ### Step 2.2: Add Remote and Push
 Run the following commands in your terminal from the project root (`c:\Users\srini\OneDrive\Desktop\SPORTS`):
 
 ```powershell
-# Set your GitHub remote repository (replace with your actual GitHub URL)
-git remote add origin https://github.com/<your-username>/SPORTSPOT.git
+# Set your GitHub remote repository
+git remote set-url origin https://github.com/M-Srinivas2004/SPORTSPOT.git
 
 # Ensure current branch is main
 git branch -M main
